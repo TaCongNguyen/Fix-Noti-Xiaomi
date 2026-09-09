@@ -14,15 +14,15 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.fixnoti"
+    namespace = "com.nguyenomg.fixnoti"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.fixnoti"
+        applicationId = "com.nguyenomg.fixnoti"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 4
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

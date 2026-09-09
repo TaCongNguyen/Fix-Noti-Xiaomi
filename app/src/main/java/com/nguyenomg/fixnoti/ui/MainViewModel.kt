@@ -1,13 +1,13 @@
-package com.example.fixnoti.ui
+package com.nguyenomg.fixnoti.ui
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fixnoti.model.AppDetailStatus
-import com.example.fixnoti.model.AppInfo
-import com.example.fixnoti.model.FixLog
-import com.example.fixnoti.repository.AppRepository
-import com.example.fixnoti.shizuku.ShizukuShellExecutor
+import com.nguyenomg.fixnoti.model.AppDetailStatus
+import com.nguyenomg.fixnoti.model.AppInfo
+import com.nguyenomg.fixnoti.model.FixLog
+import com.nguyenomg.fixnoti.repository.AppRepository
+import com.nguyenomg.fixnoti.shizuku.ShizukuShellExecutor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -202,31 +202,39 @@ class MainViewModel(
             }
 
             val total = selectedApps.size
-            var currentAppList = _uiState.value.appList
 
-            selectedApps.forEachIndexed { index, app ->
-                _uiState.update {
-                    it.copy(
-                        currentFixApp = app.appName,
-                        fixProgress = (index + 1).toFloat() / total
-                    )
-                }
-
-                val newStatus = repository.fixApp(app) { log ->
-                    _uiState.update { state ->
-                        state.copy(fixLogs = state.fixLogs + log)
+            // fixApps đọc các bảng hệ thống một lần và ghi lại một lần cho cả danh sách,
+            // thay vì lặp đọc–sửa–ghi cho từng app như trước.
+            val statuses = repository.fixApps(
+                apps = selectedApps,
+                onLog = { log ->
+                    _uiState.update { state -> state.copy(fixLogs = state.fixLogs + log) }
+                },
+                onAppStart = { app, index ->
+                    _uiState.update {
+                        it.copy(
+                            currentFixApp = app.appName,
+                            fixProgress = index.toFloat() / total
+                        )
                     }
                 }
+            )
 
-                currentAppList = updateAppDetailInList(currentAppList, app.packageName, newStatus)
-                _uiState.update { it.copy(appList = currentAppList) }
+            val errorCount = _uiState.value.fixLogs.count { it.isError }
+            val summary = if (errorCount == 0) {
+                FixLog("Hệ thống", "system", "🎉 Hoàn tất tối ưu $total ứng dụng, không có lỗi!", isSuccess = true)
+            } else {
+                FixLog("Hệ thống", "system", "⚠️ Hoàn tất $total ứng dụng nhưng có $errorCount lệnh thất bại (xem dòng đỏ ở trên).", isSuccess = false, isError = true)
             }
 
-            _uiState.update {
-                it.copy(
+            _uiState.update { state ->
+                var list = state.appList
+                statuses.forEach { (pkg, status) -> list = updateAppDetailInList(list, pkg, status) }
+                state.copy(
+                    appList = list,
                     fixProgress = 1f,
                     isFixFinished = true,
-                    fixLogs = it.fixLogs + FixLog("Hệ thống", "system", "🎉 Hoàn tất sửa chữa toàn bộ ứng dụng đã chọn!", isSuccess = true)
+                    fixLogs = state.fixLogs + summary
                 )
             }
         }

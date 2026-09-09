@@ -1,4 +1,4 @@
-package com.example.fixnoti.ui.components
+package com.nguyenomg.fixnoti.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,9 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
-import com.example.fixnoti.model.AppDetailStatus
-import com.example.fixnoti.model.AppInfo
-import com.example.fixnoti.model.OpStatus
+import com.nguyenomg.fixnoti.ui.theme.StatusColors
+import com.nguyenomg.fixnoti.model.AppDetailStatus
+import com.nguyenomg.fixnoti.model.AppInfo
+import com.nguyenomg.fixnoti.model.OpStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -286,7 +287,7 @@ fun DetailItemRow(
         Icon(
             imageVector = if (isOk) Icons.Default.CheckCircle else Icons.Default.Warning,
             contentDescription = null,
-            tint = if (isOk) Color(0xFF2E7D32) else Color(0xFFD32F2F),
+            tint = StatusColors.of(isOk),
             modifier = Modifier.size(26.dp)
         )
 
@@ -299,7 +300,7 @@ fun DetailItemRow(
                 text = statusText,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isOk) Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                color = StatusColors.of(isOk)
             )
         }
 

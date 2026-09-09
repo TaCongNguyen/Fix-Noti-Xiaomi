@@ -1,4 +1,4 @@
-package com.example.fixnoti.ui.components
+package com.nguyenomg.fixnoti.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,8 +21,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.fixnoti.ui.MainUiState
-import com.example.fixnoti.ui.MainViewModel
+import com.nguyenomg.fixnoti.ui.MainUiState
+import com.nguyenomg.fixnoti.ui.theme.StatusColors
+import com.nguyenomg.fixnoti.ui.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,13 +33,6 @@ fun AppListScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-
-    // Tự động kiểm tra và yêu cầu quyền Shizuku khi màn hình được tạo
-    LaunchedEffect(Unit) {
-        if (!uiState.isShizukuGranted) {
-            onRequestShizukuPermission()
-        }
-    }
 
     val filteredApps = MainViewModel.getFilteredApps(uiState.appList, uiState.searchQuery)
     val selectedCount = uiState.appList.count { it.isSelected }
@@ -90,7 +83,7 @@ fun AppListScreen(
                     // Shizuku Badge
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (uiState.isShizukuGranted) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                        color = StatusColors.containerOf(uiState.isShizukuGranted),
                         modifier = Modifier.padding(end = 12.dp)
                     ) {
                         Row(
@@ -100,7 +93,7 @@ fun AppListScreen(
                             Icon(
                                 imageVector = if (uiState.isShizukuGranted) Icons.Default.CheckCircle else Icons.Default.Warning,
                                 contentDescription = null,
-                                tint = if (uiState.isShizukuGranted) Color(0xFF2E7D32) else Color(0xFFC62828),
+                                tint = StatusColors.of(uiState.isShizukuGranted),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -108,7 +101,7 @@ fun AppListScreen(
                                 text = if (uiState.isShizukuGranted) "Shizuku OK" else "Thiếu Shizuku",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (uiState.isShizukuGranted) Color(0xFF2E7D32) else Color(0xFFC62828)
+                                color = StatusColors.of(uiState.isShizukuGranted)
                             )
                         }
                     }
@@ -188,7 +181,7 @@ fun AppListScreen(
                             color = if (uiState.isShowAllApps) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = if (uiState.isShowAllApps) "Danh sách đầy đủ ứng dụng người dùng đã cài" else "Lọc các ứng dụng Ngân hàng & Mạng xã hội từ GitHub",
+                            text = if (uiState.isShowAllApps) "Toàn bộ ứng dụng bạn đã cài (không gồm app hệ thống)" else "Lọc các ứng dụng Ngân hàng & Mạng xã hội từ GitHub",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -205,7 +198,7 @@ fun AppListScreen(
                         )
                     ) {
                         Text(
-                            text = if (uiState.isShowAllApps) "Chỉ hiện App Đề xuất" else "TẢI TẤT CẢ ỨNG DỤNG",
+                            text = if (uiState.isShowAllApps) "Chỉ hiện App Đề xuất" else "HIỆN TẤT CẢ APP ĐÃ CÀI",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )

@@ -1,4 +1,4 @@
-package com.example.fixnoti.model
+package com.nguyenomg.fixnoti.model
 
 import android.graphics.drawable.Drawable
 
@@ -26,15 +26,23 @@ data class AppDetailStatus(
     val isMilletNoRestrictSupported: Boolean = false,
     val isMilletNoRestrict: Boolean = false
 ) {
-    fun isAllOptimized(isGms: Boolean = false): Boolean {
-        val isBucketOk = standbyBucket.contains("ACTIVE", ignoreCase = true) ||
-                standbyBucket.contains("EXEMPTED", ignoreCase = true) ||
-                standbyBucket.contains("10") ||
-                standbyBucket.contains("5")
+    val isBucketOk: Boolean
+        get() = standbyBucket.startsWith("ACTIVE") || standbyBucket.startsWith("EXEMPTED")
 
-        val autoStartOk = autoStart.isOk() || autoStart == OpStatus.UNKNOWN
-        val autoRevokeOk = autoRevokePermissions == OpStatus.IGNORED || autoRevokePermissions == OpStatus.UNKNOWN
-        val baseOk = isWhitelisted && isBucketOk && runInBackground.isOk() && runAnyInBackground.isOk() && autoStartOk && autoRevokeOk
+    /**
+     * DEFAULT nghĩa là AppOp chưa từng được đặt trên ROM này, không có gì để sửa nên coi là đạt.
+     * Nhưng UNKNOWN (lệnh lỗi, không đọc được) thì KHÔNG được coi là đạt — trước đây nhầm
+     * chỗ này nên app báo xanh dù thực tế chưa kiểm tra được gì.
+     *
+     * Riêng Autostart giờ đặt thẳng được bằng appops nên yêu cầu đúng ALLOW.
+     */
+    fun isAllOptimized(isGms: Boolean = false): Boolean {
+        val baseOk = isWhitelisted &&
+                isBucketOk &&
+                runInBackground.isOk() &&
+                runAnyInBackground.isOk() &&
+                autoStart.isOk() &&
+                autoRevokePermissions == OpStatus.IGNORED
 
         val milletWhiteOk = !isMilletWhiteSupported || isMilletWhite
         val cloudLowLatencyOk = !isCloudLowLatencySupported || isCloudLowLatency
@@ -50,6 +58,8 @@ data class AppInfo(
     val icon: Drawable? = null,
     val isSelected: Boolean = false,
     val isGoogleGms: Boolean = false,
+    /** true khi package chỉ lấy được qua Shizuku vì PackageManager của MIUI từ chối trả về. */
+    val isHiddenByMiui: Boolean = false,
     val detailStatus: AppDetailStatus? = null
 )
 
@@ -57,5 +67,7 @@ data class FixLog(
     val appName: String,
     val packageName: String,
     val actionText: String,
-    val isSuccess: Boolean = true
+    val isSuccess: Boolean = true,
+    /** true khi lệnh shell thực sự thất bại — hiển thị đỏ trong nhật ký. */
+    val isError: Boolean = false
 )

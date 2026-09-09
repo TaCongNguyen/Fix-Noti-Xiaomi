@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chuông thông báo kèm tia sét: biểu tượng cho "thông báo tức thì". -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2.2"
+        android:scaleY="2.2"
+        android:translateX="27.6"
+        android:translateY="27.6">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4C10,21.1 10.89,22 12,22zM18,16v-5c0,-3.07 -1.64,-5.64 -4.5,-6.32V4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.63,5.36 6,7.92 6,11v5l-2,2v1h16v-1L18,16z" />
+    </group>
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M69,40l-14,20h9l-3,15l14,-20h-9z" />
+</vector>

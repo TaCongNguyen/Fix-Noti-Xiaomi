@@ -1,4 +1,4 @@
-package com.example.fixnoti.ui.components
+package com.nguyenomg.fixnoti.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.fixnoti.model.FixLog
+import com.nguyenomg.fixnoti.ui.theme.StatusColors
+import com.nguyenomg.fixnoti.model.FixLog
 
 @Composable
 fun FixProgressDialog(
@@ -73,7 +74,7 @@ fun FixProgressDialog(
                 // CẢNH BÁO: KHÔNG THOÁT APP (Theo yêu cầu từ người dùng)
                 if (!isFinished) {
                     Surface(
-                        color = Color(0xFFFFF3E0),
+                        color = StatusColors.warningContainer(),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -84,7 +85,7 @@ fun FixProgressDialog(
                             Icon(
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = "Warning",
-                                tint = Color(0xFFE65100),
+                                tint = StatusColors.warning(),
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -92,7 +93,7 @@ fun FixProgressDialog(
                                 text = "Vui lòng KHÔNG THOÁT ứng dụng khi tiến trình đang thực thi!",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFE65100)
+                                color = StatusColors.warning()
                             )
                         }
                     }
@@ -152,7 +153,11 @@ fun FixProgressDialog(
                                 text = "[${log.appName}] ${log.actionText}",
                                 fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace,
-                                color = if (log.isSuccess) Color(0xFF81C784) else Color(0xFFFFB74D),
+                                color = when {
+                                    log.isError -> Color(0xFFFF8A80)
+                                    log.isSuccess -> Color(0xFF81C784)
+                                    else -> Color(0xFFFFB74D)
+                                },
                                 modifier = Modifier.padding(vertical = 2.dp)
                             )
                         }

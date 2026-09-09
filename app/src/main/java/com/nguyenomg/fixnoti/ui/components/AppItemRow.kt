@@ -1,4 +1,4 @@
-package com.example.fixnoti.ui.components
+package com.nguyenomg.fixnoti.ui.components
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
@@ -21,7 +21,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
-import com.example.fixnoti.model.AppInfo
+import com.nguyenomg.fixnoti.ui.theme.StatusColors
+import com.nguyenomg.fixnoti.model.AppInfo
 
 @Composable
 fun AppItemRow(
@@ -113,6 +114,14 @@ fun AppItemRow(
                     }
                 }
 
+                if (app.isHiddenByMiui) {
+                    Text(
+                        text = "MIUI giấu app này — chỉ thấy được qua Shizuku",
+                        fontSize = 10.sp,
+                        color = StatusColors.warning()
+                    )
+                }
+
                 Text(
                     text = app.packageName,
                     fontSize = 12.sp,
@@ -129,13 +138,9 @@ fun AppItemRow(
                             text = if (status.isWhitelisted) "Whitelist OK" else "No Whitelist",
                             isSuccess = status.isWhitelisted
                         )
-                        val isBucketOk = status.standbyBucket.contains("ACTIVE", ignoreCase = true) ||
-                                status.standbyBucket.contains("EXEMPTED", ignoreCase = true) ||
-                                status.standbyBucket.contains("10") ||
-                                status.standbyBucket.contains("5")
                         BadgeChip(
                             text = "Bucket: ${status.standbyBucket}",
-                            isSuccess = isBucketOk
+                            isSuccess = status.isBucketOk
                         )
                     }
                 }
@@ -164,12 +169,12 @@ fun AppItemRow(
 fun BadgeChip(text: String, isSuccess: Boolean) {
     Surface(
         shape = RoundedCornerShape(4.dp),
-        color = if (isSuccess) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+        color = StatusColors.containerOf(isSuccess)
     ) {
         Text(
             text = text,
             fontSize = 10.sp,
-            color = if (isSuccess) Color(0xFF2E7D32) else Color(0xFFC62828),
+            color = StatusColors.of(isSuccess),
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
         )
