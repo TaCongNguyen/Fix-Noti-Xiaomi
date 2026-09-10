@@ -128,18 +128,15 @@ fun AppDetailBottomSheet(
                 )
 
                 // 2. Standby Bucket
-                val isBucketOk = status.standbyBucket.contains("ACTIVE", ignoreCase = true) ||
-                        status.standbyBucket.contains("EXEMPTED", ignoreCase = true) ||
-                        status.standbyBucket.contains("10") ||
-                        status.standbyBucket.contains("5")
-
+                // Dùng status.isBucketOk chứ không tự dò chuỗi: contains("5") khiến
+                // RESTRICTED (45) cũng bị coi là đạt.
                 DetailItemRow(
                     title = "2. Standby Bucket",
                     subtitle = "Nhóm phân loại ưu tiên chạy ngầm",
-                    isOk = isBucketOk,
+                    isOk = status.isBucketOk,
                     statusText = "Hiện tại: ${status.standbyBucket}",
-                    actionText = if (isBucketOk) "Thu hồi" else null,
-                    onActionClick = if (isBucketOk) { { onRevokeSinglePermission("STANDBY_BUCKET") } } else null
+                    actionText = if (status.isBucketOk) "Thu hồi" else null,
+                    onActionClick = if (status.isBucketOk) { { onRevokeSinglePermission("STANDBY_BUCKET") } } else null
                 )
 
                 // 3. RUN_IN_BACKGROUND
@@ -162,21 +159,22 @@ fun AppDetailBottomSheet(
                     onActionClick = if (status.runAnyInBackground.isOk()) { { onRevokeSinglePermission("RUN_ANY_IN_BACKGROUND") } } else null
                 )
 
-                // 5. Auto Start (10008)
+                // 5. Auto Start (10008) — chỉ đọc, không đặt được bằng lệnh
                 val autoStartText = when (status.autoStart) {
                     OpStatus.ALLOWED -> "ĐÃ BẬT (ALLOW)"
-                    OpStatus.IGNORED -> "ĐÃ TẮT (IGNORE)"
-                    OpStatus.DENIED -> "ĐÃ TẮT (DENY)"
-                    OpStatus.DEFAULT -> "Default"
+                    OpStatus.IGNORED -> "ĐÃ TẮT — cần bật tay"
+                    OpStatus.DENIED -> "ĐÃ TẮT — cần bật tay"
+                    OpStatus.DEFAULT -> "ROM này không có mục Tự khởi động"
                     OpStatus.UNKNOWN -> "Không lấy được giá trị"
                 }
                 DetailItemRow(
                     title = "5. Auto Start (Tự khởi chạy)",
-                    subtitle = "Quyền tự khởi chạy hệ thống (AppOp 10008)",
-                    isOk = status.autoStart.isOk(),
+                    subtitle = "Chỉ bật được thủ công trong Bảo mật > Quyền > Tự khởi động. " +
+                            "Lệnh shell đổi được giá trị nhưng MIUI không áp dụng.",
+                    isOk = !status.needsManualAutoStart,
                     statusText = autoStartText,
-                    actionText = "Sửa quyền",
-                    onActionClick = { onOpenAppSettings() }
+                    actionText = if (status.needsManualAutoStart) "Bật tay" else null,
+                    onActionClick = if (status.needsManualAutoStart) { { onOpenAppSettings() } } else null
                 )
 
                 // 6. Manage if unused (AUTO_REVOKE_PERMISSIONS_IF_UNUSED)
@@ -312,7 +310,7 @@ fun DetailItemRow(
                 modifier = Modifier.height(32.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = if (actionText == "Sửa quyền") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                    contentColor = if (actionText == "Bật tay") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
             ) {
                 Text(

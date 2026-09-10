@@ -180,9 +180,10 @@ class MainViewModel(
         }
     }
 
-    fun openAppSettings(packageName: String) {
+    /** Mở màn hình Tự khởi động của MIUI (nơi duy nhất bật được mục này), fallback về trang chi tiết app. */
+    fun openAutoStartSettings(packageName: String) {
         viewModelScope.launch {
-            repository.openAppSettings(packageName)
+            repository.openAutoStartSettings(packageName)
         }
     }
 

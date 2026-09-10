@@ -310,17 +310,21 @@ class AppRepository {
             val name = app.appName
             val pkg = app.packageName
 
-            onLog(FixLog(name, pkg, "Đang áp dụng 6 tối ưu hoá cấp hệ thống...", isSuccess = false))
+            onLog(FixLog(name, pkg, "Đang áp dụng 5 tối ưu hoá cấp hệ thống...", isSuccess = false))
 
+            // KHÔNG ghi AppOp 10008 (Tự khởi động) ở đây.
+            //
+            // `appops set 10008 allow` chạy trót lọt và đọc lại đúng là "allow", nhưng trên
+            // HyperOS 3 thì Autostart thật vẫn tắt — Security Center mới là nơi thực thi.
+            // Ghi vào đó chỉ khiến chỉ báo hiện xanh trong khi tính năng vẫn tắt, che mất
+            // đúng thứ người dùng cần biết. Chỉ ĐỌC op này làm chỉ báo, còn việc bật để
+            // người dùng tự làm trong Cài đặt.
             val commands = listOf(
                 "Thêm vào DeviceIdle Whitelist" to "cmd deviceidle whitelist +$pkg",
                 "Đặt Standby Bucket -> ACTIVE" to "am set-standby-bucket $pkg active",
                 "Bật RUN_IN_BACKGROUND -> ALLOW" to "cmd appops set --user 0 $pkg RUN_IN_BACKGROUND allow",
                 "Bật RUN_ANY_IN_BACKGROUND -> ALLOW" to "cmd appops set --user 0 $pkg RUN_ANY_IN_BACKGROUND allow",
-                "Đặt Manage if unused -> IGNORE" to "cmd appops set --user 0 $pkg AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore",
-                // AppOp 10008 là "Tự khởi động" của Xiaomi. Bản cũ chỉ đọc trạng thái rồi
-                // mở Cài đặt cho người dùng tự bật; thực tế đặt thẳng bằng appops được.
-                "Bật Tự khởi động (Autostart)" to "cmd appops set --user 0 $pkg 10008 allow"
+                "Đặt Manage if unused -> IGNORE" to "cmd appops set --user 0 $pkg AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore"
             )
 
             val results = ShizukuShellExecutor.runBatch(commands.map { it.second })
@@ -343,7 +347,24 @@ class AppRepository {
 
         // Kiểm tra lại để xác nhận kết quả, dùng snapshot mới sau khi đã ghi.
         val verifySnapshot = loadSystemSnapshot()
-        apps.associate { it.packageName to checkAppDetailStatus(it.packageName, verifySnapshot) }
+        val statuses = apps.associate { it.packageName to checkAppDetailStatus(it.packageName, verifySnapshot) }
+
+        // Autostart không bật được bằng lệnh, phải nhắc người dùng tự làm.
+        val needAutoStart = apps.filter { statuses[it.packageName]?.needsManualAutoStart == true }
+        if (needAutoStart.isNotEmpty()) {
+            onLog(
+                FixLog(
+                    "Cần làm tay",
+                    "autostart",
+                    "⚠ ${needAutoStart.size} ứng dụng chưa bật Tự khởi động: " +
+                            needAutoStart.joinToString(", ") { it.appName } +
+                            ". Mở Bảo mật > Quyền > Tự khởi động để bật — lệnh shell không bật được mục này.",
+                    isSuccess = false
+                )
+            )
+        }
+
+        statuses
     }
 
     suspend fun revokeAllPermissions(app: AppInfo, onLog: suspend (FixLog) -> Unit): AppDetailStatus =
@@ -412,7 +433,7 @@ class AppRepository {
             "MILLET_WHITE" -> removeFromTable(KEY_MILLET_WHITE, pkg)
             "CLOUD_LOWLATENCY" -> removeFromTable(KEY_CLOUD_LOW_LATENCY, pkg)
             "MILLET_NO_RESTRICT" -> removeFromTable(KEY_MILLET_NO_RESTRICT, pkg)
-            "AUTO_START" -> openAppSettings(pkg)
+            "AUTO_START" -> openAutoStartSettings(pkg)
         }
 
         checkAppDetailStatus(pkg)
@@ -499,6 +520,21 @@ class AppRepository {
         ShizukuShellExecutor.executeCommand(
             "am start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:$packageName"
         )
+    }
+
+    /**
+     * Mở thẳng màn hình Tự khởi động của MIUI, nơi bật/tắt Autostart cho mọi app trong một danh sách.
+     * Nhanh hơn nhiều so với vào trang chi tiết từng app. ROM không có màn hình này thì quay về
+     * trang chi tiết app như cũ.
+     */
+    suspend fun openAutoStartSettings(packageName: String): Boolean = withContext(Dispatchers.IO) {
+        val result = ShizukuShellExecutor.run(
+            "am start -n com.miui.securitycenter/com.miui.permcenter.autostart.AutoStartManagementActivity"
+        )
+        if (result.isSuccess) return@withContext true
+
+        openAppSettings(packageName)
+        false
     }
 
     // ---------------------------------------------------------------- Phân tích output

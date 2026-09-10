@@ -30,6 +30,14 @@ data class AppDetailStatus(
         get() = standbyBucket.startsWith("ACTIVE") || standbyBucket.startsWith("EXEMPTED")
 
     /**
+     * Autostart của MIUI do Security Center thực thi, `appops set 10008 allow` không có tác dụng
+     * thật dù đọc lại vẫn thấy "allow". Vì vậy app chỉ ĐỌC op này rồi nhắc người dùng bật tay.
+     * DEFAULT nghĩa là ROM không có op này (máy không phải Xiaomi) nên không cần làm gì.
+     */
+    val needsManualAutoStart: Boolean
+        get() = autoStart != OpStatus.ALLOWED && autoStart != OpStatus.DEFAULT
+
+    /**
      * DEFAULT nghĩa là AppOp chưa từng được đặt trên ROM này, không có gì để sửa nên coi là đạt.
      * Nhưng UNKNOWN (lệnh lỗi, không đọc được) thì KHÔNG được coi là đạt — trước đây nhầm
      * chỗ này nên app báo xanh dù thực tế chưa kiểm tra được gì.
@@ -41,7 +49,7 @@ data class AppDetailStatus(
                 isBucketOk &&
                 runInBackground.isOk() &&
                 runAnyInBackground.isOk() &&
-                autoStart.isOk() &&
+                !needsManualAutoStart &&
                 autoRevokePermissions == OpStatus.IGNORED
 
         val milletWhiteOk = !isMilletWhiteSupported || isMilletWhite
