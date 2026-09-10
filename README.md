@@ -71,6 +71,8 @@ Có hai thứ app chỉ **đọc và nhắc**, bạn phải tự bật trong Cà
 
 Nếu quyền thông báo của một app bị tắt thì mọi tối ưu chạy ngầm đều vô nghĩa — app có chạy cũng không được phép hiện thông báo. App hiển thị trạng thái này ở mục 1 trong màn hình chi tiết, kèm nút mở thẳng trang Thông báo của app đó.
 
+Trạng thái được đọc từ `importance` trong `dumpsys notification`, **không** phải từ AppOp `POST_NOTIFICATION`. Đo trên HyperOS 3: app bị chặn (`com.twitter.android`) và app bình thường (`com.shopee.vn`) trả về AppOp **y hệt nhau** (`Uid mode: ignore` + `POST_NOTIFICATION: allow`), nên op đó không phân biệt được. Ngoài ra `appops set POST_NOTIFICATION` cũng không có tác dụng vì op này suy ra từ runtime permission.
+
 > **Cài đặt → Ứng dụng → (tên app) → Thông báo**
 
 ### 2. Tự khởi động (Autostart)

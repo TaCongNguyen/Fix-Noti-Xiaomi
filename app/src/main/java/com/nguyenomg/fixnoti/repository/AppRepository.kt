@@ -24,7 +24,17 @@ data class SystemSnapshot(
     val idleWhitelist: Set<String> = emptySet(),
     val milletWhite: SettingTable? = null,
     val cloudLowLatency: SettingTable? = null,
-    val milletNoRestrict: SettingTable? = null
+    val milletNoRestrict: SettingTable? = null,
+    /**
+     * Các package bị chặn thông báo (`importance=NONE` trong `dumpsys notification`).
+     *
+     * KHÔNG dùng AppOp POST_NOTIFICATION cho việc này: đo trên HyperOS 3 thì app bị chặn
+     * và app bình thường trả về y hệt nhau (`Uid mode: ignore` + `POST_NOTIFICATION: allow`),
+     * nên op đó không phân biệt được. `importance` mới là trạng thái thật.
+     */
+    val blockedNotifications: Set<String> = emptySet(),
+    /** false khi không đọc được dumpsys — khi đó không được kết luận app nào cũng bật. */
+    val notificationDataAvailable: Boolean = false
 )
 
 /**
@@ -52,6 +62,9 @@ class AppRepository {
         const val KEY_MILLET_WHITE = "millet_white"
         const val KEY_CLOUD_LOW_LATENCY = "cloud_lowlatency_whitelist"
         const val KEY_MILLET_NO_RESTRICT = "MILLET_NO_RESTRICT_APP"
+
+        /** `AppSettings: <package> (<uid>) <phan con lai>` trong dumpsys notification. */
+        private val APP_SETTINGS_REGEX = Regex("""AppSettings:\s+(\S+)\s+\(\d+\)(.*)""")
 
         /** Tối thiểu hai đoạn ngăn bằng dấu chấm, chỉ chữ/số/gạch dưới. */
         private val PACKAGE_NAME_REGEX = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+")
@@ -234,17 +247,42 @@ class AppRepository {
                 "dumpsys deviceidle whitelist",
                 "settings get system $KEY_MILLET_WHITE",
                 "settings get system $KEY_CLOUD_LOW_LATENCY",
-                "settings get system $KEY_MILLET_NO_RESTRICT"
+                "settings get system $KEY_MILLET_NO_RESTRICT",
+                // Lọc ngay trong shell: dumpsys notification đầy đủ rất dài (mỗi app kèm
+                // toàn bộ NotificationChannel), trong khi ta chỉ cần các dòng tóm tắt.
+                "dumpsys notification | grep AppSettings:"
             )
         )
 
+        val notificationResult = results[4]
         SystemSnapshot(
             idleWhitelist = if (results[0].isSuccess) parseIdleWhitelist(results[0].output) else emptySet(),
             milletWhite = parseSettingTable(KEY_MILLET_WHITE, results[1]),
             cloudLowLatency = parseSettingTable(KEY_CLOUD_LOW_LATENCY, results[2]),
-            milletNoRestrict = parseSettingTable(KEY_MILLET_NO_RESTRICT, results[3])
+            milletNoRestrict = parseSettingTable(KEY_MILLET_NO_RESTRICT, results[3]),
+            blockedNotifications = if (notificationResult.isSuccess) {
+                parseBlockedNotifications(notificationResult.output)
+            } else {
+                emptySet()
+            },
+            notificationDataAvailable = notificationResult.isSuccess &&
+                    notificationResult.output.contains("AppSettings:")
         )
     }
+
+    /**
+     * Tách các package bị chặn thông báo từ những dòng dạng:
+     *
+     *     AppSettings: com.twitter.android (10352) importance=NONE userSet=true
+     *
+     * `importance=NONE` nghĩa là thông báo bị chặn. Package không xuất hiện trong danh sách
+     * là đang ở mặc định, tức vẫn được hiện thông báo.
+     */
+    private fun parseBlockedNotifications(output: String): Set<String> =
+        output.lines().mapNotNull { line ->
+            val match = APP_SETTINGS_REGEX.find(line) ?: return@mapNotNull null
+            if (match.groupValues[2].contains("importance=NONE")) match.groupValues[1] else null
+        }.toSet()
 
     suspend fun checkAppDetailStatus(packageName: String): AppDetailStatus =
         checkAppDetailStatus(packageName, loadSystemSnapshot())
@@ -260,8 +298,7 @@ class AppRepository {
                 "cmd appops get $packageName RUN_IN_BACKGROUND",
                 "cmd appops get $packageName RUN_ANY_IN_BACKGROUND",
                 "cmd appops get $packageName 10008",
-                "cmd appops get $packageName AUTO_REVOKE_PERMISSIONS_IF_UNUSED",
-                "cmd appops get $packageName POST_NOTIFICATION"
+                "cmd appops get $packageName AUTO_REVOKE_PERMISSIONS_IF_UNUSED"
             )
         )
 
@@ -270,7 +307,11 @@ class AppRepository {
             if (results[index].isSuccess) parseOpStatus(results[index].output) else OpStatus.UNKNOWN
 
         AppDetailStatus(
-            notifications = opAt(5),
+            notifications = when {
+                !snapshot.notificationDataAvailable -> OpStatus.UNKNOWN
+                snapshot.blockedNotifications.contains(packageName) -> OpStatus.IGNORED
+                else -> OpStatus.ALLOWED
+            },
             isWhitelisted = snapshot.idleWhitelist.contains(packageName),
             standbyBucket = if (results[0].isSuccess) parseStandbyBucket(results[0].output) else "UNKNOWN",
             runInBackground = opAt(1),
