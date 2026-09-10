@@ -260,7 +260,8 @@ class AppRepository {
                 "cmd appops get $packageName RUN_IN_BACKGROUND",
                 "cmd appops get $packageName RUN_ANY_IN_BACKGROUND",
                 "cmd appops get $packageName 10008",
-                "cmd appops get $packageName AUTO_REVOKE_PERMISSIONS_IF_UNUSED"
+                "cmd appops get $packageName AUTO_REVOKE_PERMISSIONS_IF_UNUSED",
+                "cmd appops get $packageName POST_NOTIFICATION"
             )
         )
 
@@ -269,6 +270,7 @@ class AppRepository {
             if (results[index].isSuccess) parseOpStatus(results[index].output) else OpStatus.UNKNOWN
 
         AppDetailStatus(
+            notifications = opAt(5),
             isWhitelisted = snapshot.idleWhitelist.contains(packageName),
             standbyBucket = if (results[0].isSuccess) parseStandbyBucket(results[0].output) else "UNKNOWN",
             runInBackground = opAt(1),
@@ -348,6 +350,22 @@ class AppRepository {
         // Kiểm tra lại để xác nhận kết quả, dùng snapshot mới sau khi đã ghi.
         val verifySnapshot = loadSystemSnapshot()
         val statuses = apps.associate { it.packageName to checkAppDetailStatus(it.packageName, verifySnapshot) }
+
+        // Quyền thông báo bị tắt thì mọi tối ưu ở trên đều vô nghĩa, nên cảnh báo trước tiên.
+        val needNotifications = apps.filter { statuses[it.packageName]?.needsManualNotifications == true }
+        if (needNotifications.isNotEmpty()) {
+            onLog(
+                FixLog(
+                    "Cần làm tay",
+                    "notifications",
+                    "⚠ ${needNotifications.size} ứng dụng đang TẮT quyền thông báo: " +
+                            needNotifications.joinToString(", ") { it.appName } +
+                            ". Chạy ngầm mấy cũng vô ích nếu app không được phép hiện thông báo — " +
+                            "bật trong Cài đặt > Ứng dụng > (tên app) > Thông báo.",
+                    isSuccess = false
+                )
+            )
+        }
 
         // Autostart không bật được bằng lệnh, phải nhắc người dùng tự làm.
         val needAutoStart = apps.filter { statuses[it.packageName]?.needsManualAutoStart == true }
@@ -519,6 +537,14 @@ class AppRepository {
     suspend fun openAppSettings(packageName: String): String = withContext(Dispatchers.IO) {
         ShizukuShellExecutor.executeCommand(
             "am start -a android.settings.APPLICATION_DETAILS_SETTINGS -d package:$packageName"
+        )
+    }
+
+    /** Mở thẳng trang cài đặt Thông báo của một ứng dụng. */
+    suspend fun openNotificationSettings(packageName: String): String = withContext(Dispatchers.IO) {
+        ShizukuShellExecutor.executeCommand(
+            "am start -a android.settings.APP_NOTIFICATION_SETTINGS " +
+                    "--es android.provider.extra.APP_PACKAGE $packageName"
         )
     }
 

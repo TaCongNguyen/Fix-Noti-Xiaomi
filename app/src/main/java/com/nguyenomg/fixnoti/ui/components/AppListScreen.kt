@@ -299,7 +299,8 @@ fun AppListScreen(
             onFixSingleApp = { viewModel.fixAppFromDetail(app) },
             onRevokeSinglePermission = { permType -> viewModel.revokeSinglePermission(app, permType) },
             onRevokeAllPermissions = { viewModel.revokeAllPermissionsFromDetail(app) },
-            onOpenAppSettings = { viewModel.openAutoStartSettings(app.packageName) }
+            onOpenAppSettings = { viewModel.openAutoStartSettings(app.packageName) },
+            onOpenNotificationSettings = { viewModel.openNotificationSettings(app.packageName) }
         )
     }
 

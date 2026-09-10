@@ -180,6 +180,13 @@ class MainViewModel(
         }
     }
 
+    /** Mở trang cài đặt Thông báo của một ứng dụng. */
+    fun openNotificationSettings(packageName: String) {
+        viewModelScope.launch {
+            repository.openNotificationSettings(packageName)
+        }
+    }
+
     /** Mở màn hình Tự khởi động của MIUI (nơi duy nhất bật được mục này), fallback về trang chi tiết app. */
     fun openAutoStartSettings(packageName: String) {
         viewModelScope.launch {

@@ -13,6 +13,12 @@ enum class OpStatus {
 }
 
 data class AppDetailStatus(
+    /**
+     * AppOp POST_NOTIFICATION — quyền hiện thông báo. Tắt mục này thì mọi tối ưu chạy ngầm
+     * đều vô nghĩa vì app có chạy cũng không được hiện thông báo. Cũng chỉ ĐỌC như Autostart:
+     * chưa kiểm chứng được MIUI có tôn trọng lệnh ghi hay không, nên không ghi bừa.
+     */
+    val notifications: OpStatus = OpStatus.UNKNOWN,
     val isWhitelisted: Boolean = false,
     val standbyBucket: String = "UNKNOWN",
     val runInBackground: OpStatus = OpStatus.UNKNOWN,
@@ -37,15 +43,29 @@ data class AppDetailStatus(
     val needsManualAutoStart: Boolean
         get() = autoStart != OpStatus.ALLOWED && autoStart != OpStatus.DEFAULT
 
+    /** Chắc chắn đang bật. UNKNOWN (không đọc được) KHÔNG được tính là đạt. */
+    val isNotificationOk: Boolean
+        get() = notifications == OpStatus.ALLOWED || notifications == OpStatus.DEFAULT
+
+    /**
+     * Chắc chắn đang tắt — chỉ khi đó mới nhắc người dùng đi bật.
+     * Khác với [isNotificationOk]: trạng thái UNKNOWN thì không đạt nhưng cũng không nhắc,
+     * vì nhắc dựa trên phỏng đoán chỉ khiến người dùng đi tìm thứ không có vấn đề.
+     */
+    val needsManualNotifications: Boolean
+        get() = notifications == OpStatus.IGNORED || notifications == OpStatus.DENIED
+
     /**
      * DEFAULT nghĩa là AppOp chưa từng được đặt trên ROM này, không có gì để sửa nên coi là đạt.
      * Nhưng UNKNOWN (lệnh lỗi, không đọc được) thì KHÔNG được coi là đạt — trước đây nhầm
      * chỗ này nên app báo xanh dù thực tế chưa kiểm tra được gì.
      *
-     * Riêng Autostart giờ đặt thẳng được bằng appops nên yêu cầu đúng ALLOW.
+     * Quyền thông báo và Autostart phải do người dùng tự bật, nhưng vẫn tính vào đây:
+     * thiếu một trong hai thì app chưa thực sự nhận thông báo tức thì.
      */
     fun isAllOptimized(isGms: Boolean = false): Boolean {
-        val baseOk = isWhitelisted &&
+        val baseOk = isNotificationOk &&
+                isWhitelisted &&
                 isBucketOk &&
                 runInBackground.isOk() &&
                 runAnyInBackground.isOk() &&

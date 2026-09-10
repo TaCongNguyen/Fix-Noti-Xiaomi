@@ -63,7 +63,17 @@ Kiểm tra một ứng dụng từng tốn **9 lần spawn process** qua binder;
 
 ---
 
-## ⚠️ Về mục "Tự khởi động" (Autostart)
+## ⚠️ Hai mục app KHÔNG tự bật được
+
+Có hai thứ app chỉ **đọc và nhắc**, bạn phải tự bật trong Cài đặt:
+
+### 1. Quyền thông báo
+
+Nếu quyền thông báo của một app bị tắt thì mọi tối ưu chạy ngầm đều vô nghĩa — app có chạy cũng không được phép hiện thông báo. App hiển thị trạng thái này ở mục 1 trong màn hình chi tiết, kèm nút mở thẳng trang Thông báo của app đó.
+
+> **Cài đặt → Ứng dụng → (tên app) → Thông báo**
+
+### 2. Tự khởi động (Autostart)
 
 **App KHÔNG bật được mục này thay bạn — bắt buộc phải bật thủ công.**
 
@@ -73,7 +83,7 @@ Vì vậy app **chỉ đọc** giá trị này làm chỉ báo, và nhắc bạn
 
 > **Bảo mật → Quyền → Tự khởi động** *(Security → Permissions → Autostart)*
 
-Bấm nút **"Bật tay"** ở mục 5 trong màn hình chi tiết để mở thẳng tới đó.
+Bấm nút **"Bật tay"** ở mục 6 trong màn hình chi tiết để mở thẳng tới đó.
 
 ---
 
@@ -100,7 +110,7 @@ Mục này yêu cầu đã **đăng nhập tài khoản Mi** và có **SIM** tro
 3. Mở **Fix-Noti-Xiaomi** và cấp quyền Shizuku khi được hỏi.
 4. Tích chọn ứng dụng cần sửa rồi bấm **"FIX THÔNG BÁO"**. Đừng thoát app cho tới khi xong.
 5. Đọc nhật ký: 🟢 xanh = thành công, 🟠 cam = đang chạy, 🔴 **đỏ = lệnh thất bại**.
-6. Vào **Bảo mật → Quyền → Tự khởi động** bật thủ công cho các app vừa sửa (xem mục cảnh báo ở trên).
+6. Làm nốt hai bước thủ công mà app không tự bật được: **quyền thông báo** và **Tự khởi động** (xem mục cảnh báo ở trên). Nhật ký cuối đợt fix sẽ liệt kê app nào còn thiếu.
 
 > 💡 **Đừng tối ưu tất cả ứng dụng.** Đưa mọi app vào whitelist chống Doze sẽ làm **tụt pin rõ rệt** — Doze tồn tại là có lý do. Chỉ nên chọn những app thật sự cần thông báo tức thì (nhắn tin, ngân hàng, gọi xe), khoảng 10–20 app là hợp lý.
 
