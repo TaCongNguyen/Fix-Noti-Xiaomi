@@ -23,7 +23,7 @@
   - **Manage if unused**: Tắt cơ chế tự thu hồi quyền khi lâu không dùng.
   - **MIUI/HyperOS System Whitelists**: Thêm ứng dụng vào các bảng danh sách trắng của hệ thống Xiaomi (`millet_white`, `cloud_lowlatency_whitelist`, `MILLET_NO_RESTRICT_APP`) — chỉ với những bảng ROM thực sự có.
 - 🔍 **Quản lý & Kiểm tra chi tiết**: Hiển thị trạng thái từng chỉ số tối ưu hóa cho mỗi ứng dụng, hỗ trợ bật/tắt hoặc khôi phục quyền thủ công.
-- 🌐 **Cập nhật danh sách ứng dụng đề xuất qua CDN**: Tải tự động danh sách các ứng dụng phổ biến với cơ chế fallback và bộ nhớ đệm.
+- 🌐 **Cập nhật danh sách ứng dụng đề xuất qua CDN**: Tải tự động từ [`user_apps.txt`](user_apps.txt) của repo này (jsDelivr, fallback sang raw.githubusercontent, cuối cùng là danh sách mặc định trong code). Sửa file đó rồi commit là danh sách đề xuất trong app đổi theo.
 - 🎨 **Giao diện hiện đại**: Jetpack Compose + Material Design 3, hỗ trợ **Dark Mode** theo hệ thống.
 
 ---

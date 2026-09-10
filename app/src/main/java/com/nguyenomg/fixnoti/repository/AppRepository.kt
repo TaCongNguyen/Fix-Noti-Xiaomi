@@ -54,8 +54,10 @@ data class SettingTable(
 class AppRepository {
 
     companion object {
-        private const val JSDELIVR_RAW_URL = "https://cdn.jsdelivr.net/gh/optimus0701/Fix-Noti-Xiaomi@master/user_apps.txt"
-        private const val GITHUB_RAW_URL = "https://raw.githubusercontent.com/optimus0701/Fix-Noti-Xiaomi/master/user_apps.txt"
+        // Trỏ về repo của chính bản fork này, nếu không thì user_apps.txt trong repo
+        // không có tác dụng gì và danh sách đề xuất phụ thuộc vào repo của người khác.
+        private const val JSDELIVR_RAW_URL = "https://cdn.jsdelivr.net/gh/TaCongNguyen/Fix-Noti-Xiaomi@master/user_apps.txt"
+        private const val GITHUB_RAW_URL = "https://raw.githubusercontent.com/TaCongNguyen/Fix-Noti-Xiaomi/master/user_apps.txt"
 
         private const val GMS_PACKAGE = "com.google.android.gms"
 

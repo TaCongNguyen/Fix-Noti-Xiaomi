@@ -118,7 +118,11 @@ fun AppDetailBottomSheet(
                     CircularProgressIndicator()
                 }
             } else {
-                // 1. Quyền thông báo — điều kiện tiên quyết, đặt trên cùng.
+                // Đánh số động: các mục MIUI chỉ hiện khi ROM có bảng tương ứng,
+                // nếu để số cứng thì danh sách sẽ nhảy cóc (7 -> 9) trông như lỗi.
+                var itemIndex = 0
+
+                // Quyền thông báo — điều kiện tiên quyết, đặt trên cùng.
                 // Chỉ đọc như Auto Start: chưa kiểm chứng được MIUI có tôn trọng lệnh ghi không.
                 val notificationText = when (status.notifications) {
                     OpStatus.ALLOWED -> "ĐANG BẬT"
@@ -128,7 +132,7 @@ fun AppDetailBottomSheet(
                     OpStatus.UNKNOWN -> "Không lấy được giá trị"
                 }
                 DetailItemRow(
-                    title = "1. Quyền thông báo",
+                    title = "${++itemIndex}. Quyền thông báo",
                     subtitle = "Nếu tắt thì mọi tối ưu bên dưới đều vô nghĩa: app có chạy ngầm " +
                             "cũng không được phép hiện thông báo. Bật trong Cài đặt của app.",
                     isOk = status.isNotificationOk,
@@ -139,7 +143,7 @@ fun AppDetailBottomSheet(
 
                 // 2. DeviceIdle Whitelist
                 DetailItemRow(
-                    title = "2. DeviceIdle Whitelist",
+                    title = "${++itemIndex}. DeviceIdle Whitelist",
                     subtitle = "Danh sách bỏ qua tối ưu hóa pin hệ thống",
                     isOk = status.isWhitelisted,
                     statusText = if (status.isWhitelisted) "ĐÃ BỎ QUA TỐI ƯU PIN" else "CHƯA BỎ QUA TỐI ƯU PIN",
@@ -151,7 +155,7 @@ fun AppDetailBottomSheet(
                 // Dùng status.isBucketOk chứ không tự dò chuỗi: contains("5") khiến
                 // RESTRICTED (45) cũng bị coi là đạt.
                 DetailItemRow(
-                    title = "3. Standby Bucket",
+                    title = "${++itemIndex}. Standby Bucket",
                     subtitle = "Nhóm phân loại ưu tiên chạy ngầm",
                     isOk = status.isBucketOk,
                     statusText = "Hiện tại: ${status.standbyBucket}",
@@ -161,7 +165,7 @@ fun AppDetailBottomSheet(
 
                 // 3. RUN_IN_BACKGROUND
                 DetailItemRow(
-                    title = "4. Quyền RUN_IN_BACKGROUND",
+                    title = "${++itemIndex}. Quyền RUN_IN_BACKGROUND",
                     subtitle = "Cho phép dịch vụ ứng dụng chạy ngầm",
                     isOk = status.runInBackground.isOk(),
                     statusText = "Trạng thái: ${status.runInBackground.name}",
@@ -171,7 +175,7 @@ fun AppDetailBottomSheet(
 
                 // 4. RUN_ANY_IN_BACKGROUND
                 DetailItemRow(
-                    title = "5. Quyền RUN_ANY_IN_BACKGROUND",
+                    title = "${++itemIndex}. Quyền RUN_ANY_IN_BACKGROUND",
                     subtitle = "Cho phép tác vụ ngầm/Alarm/Broadcast",
                     isOk = status.runAnyInBackground.isOk(),
                     statusText = "Trạng thái: ${status.runAnyInBackground.name}",
@@ -188,7 +192,7 @@ fun AppDetailBottomSheet(
                     OpStatus.UNKNOWN -> "Không lấy được giá trị"
                 }
                 DetailItemRow(
-                    title = "6. Auto Start (Tự khởi chạy)",
+                    title = "${++itemIndex}. Auto Start (Tự khởi chạy)",
                     subtitle = "Chỉ bật được thủ công trong Bảo mật > Quyền > Tự khởi động. " +
                             "Lệnh shell đổi được giá trị nhưng MIUI không áp dụng.",
                     isOk = !status.needsManualAutoStart,
@@ -207,7 +211,7 @@ fun AppDetailBottomSheet(
                     OpStatus.UNKNOWN -> "Không lấy được giá trị"
                 }
                 DetailItemRow(
-                    title = "7. Manage if unused",
+                    title = "${++itemIndex}. Manage if unused",
                     subtitle = "Tự động thu hồi quyền khi không dùng (AUTO_REVOKE_PERMISSIONS_IF_UNUSED)",
                     isOk = isAutoRevokeOk,
                     statusText = autoRevokeStatusText,
@@ -217,7 +221,7 @@ fun AppDetailBottomSheet(
 
                 if (status.isMilletWhiteSupported) {
                     DetailItemRow(
-                        title = "8. MIUI millet_white",
+                        title = "${++itemIndex}. MIUI millet_white",
                         subtitle = "Danh sách trắng Millet Freeze Killer",
                         isOk = status.isMilletWhite,
                         statusText = if (status.isMilletWhite) "ĐÃ CÓ TRONG MILLET_WHITE" else "CHƯA CÓ TRONG MILLET_WHITE",
@@ -228,7 +232,7 @@ fun AppDetailBottomSheet(
 
                 if (status.isCloudLowLatencySupported) {
                     DetailItemRow(
-                        title = "9. MIUI cloud_lowlatency_whitelist",
+                        title = "${++itemIndex}. MIUI cloud_lowlatency_whitelist",
                         subtitle = "Danh sách ưu tiên độ trễ thấp Cloud",
                         isOk = status.isCloudLowLatency,
                         statusText = if (status.isCloudLowLatency) "ĐÃ CÓ TRONG LOWLATENCY_WHITELIST" else "CHƯA CÓ TRONG LOWLATENCY_WHITELIST",
@@ -239,7 +243,7 @@ fun AppDetailBottomSheet(
 
                 if (status.isMilletNoRestrictSupported) {
                     DetailItemRow(
-                        title = "10. MIUI MILLET_NO_RESTRICT_APP",
+                        title = "${++itemIndex}. MIUI MILLET_NO_RESTRICT_APP",
                         subtitle = "Danh sách ứng dụng Millet không hạn chế",
                         isOk = status.isMilletNoRestrict,
                         statusText = if (status.isMilletNoRestrict) "ĐÃ CÓ TRONG MILLET_NO_RESTRICT" else "CHƯA CÓ TRONG MILLET_NO_RESTRICT",
